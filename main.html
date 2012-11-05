@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>index</title>
+		<meta name="description" content="" />
+		<meta name="author" content="PRO11_6" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+			* { margin: 0; padding: 0;}
+			body {
+				overflow: hidden;
+			}
+			canvas {
+				/*border: 1px solid red;*/
+			}
+		</style>
+	</head>
+	<body>
+		<div id="container"></div>
+		<script type="text/javascript" src="src/kinetic-v4.0.1.min.js"></script>
+		<script type="text/javascript">
+			var manySquares = function(stage, layer) {
+				var len = 300;
+				var squares = [];
+				for(var i = 0; i < len; i++) {
+					var w = Math.random() * 30 << 0;
+					var h = Math.random() * 30 << 0;
+					var x = Math.random() * stage.getWidth() << 0;
+					var y = Math.random() * stage.getHeight() << 0;
+					var c = (Math.random() * 0xFFFFFF << 0).toString(16);
+					
+					var square = new Kinetic.Rect({
+						width: w,
+						height: h,
+						x: x,
+						y: y,
+						fill: '#'+c,
+						origX: x,
+						period: Math.random() * 1500 + 1500 << 0
+					});
+					
+					layer.add(square);
+					squares.push(square);
+				};
+				
+				var amplitude = 150;
+				var period = 1500;
+				
+				var anim = new Kinetic.Animation({
+					func: function(frame) {
+						for(var i in squares) {
+							var posX = amplitude * Math.sin(frame.time * 2 * Math.PI / squares[i].attrs.period);
+							squares[i].setX(posX + squares[i].attrs.origX);
+							//squares[i].setY(posX + stage.getHeight() / 2);
+						}
+					},
+					node: layer
+				});
+				anim.start();
+				stage.add(layer);
+			};
+			
+			var manyCircles = function(stage, layer) {
+				var len = 20;
+				var circles = [];
+				var gap = (Math.PI * 2) / len;
+				var centerX = stage.getWidth() / 2;
+				var centerY = stage.getHeight() / 2;
+				var sW = stage.getWidth();
+				
+				for(var i = 0; i < len; i++) {
+					var x = centerX + Math.cos(i * gap) * 250;
+					var y = centerY + Math.sin(i * gap) * 80;
+					var c = (Math.random() * 0xFFFFFF << 0).toString(16);
+					
+					var circle = new Kinetic.Circle({
+						radius: 50,
+						fill: '#f50',
+						x: x,
+						y: y
+					});
+					
+					circles.push(circle);
+					layer.add(circle);
+				};
+				
+				var alpha = 0.1;
+				var val = 0;
+				window.onmousemove = function(e) {
+					val = ((e.pageX - sW / 2) / sW) * 0.1;
+				}
+				
+				var anim = new Kinetic.Animation({
+					func: function(frame) {
+						alpha += val;
+						for(var i in circles) {
+							var posX = centerX + Math.cos(i * gap + alpha) * 250;
+							var posY = centerY + Math.sin(i * gap + alpha) * 80;
+							var scale = Math.sin(i * gap + alpha) * 0.4 + 1;
+							
+							circles[i].setX(posX);
+							circles[i].setY(posY);
+							circles[i].setScale(scale);
+							circles[i].setOpacity(scale - 0.5);
+						}
+					},
+					node: layer
+				});
+				
+				anim.start();
+				stage.add(layer);
+			}
+			
+			function manyBricks(stage, layer) {
+				// Common
+				var sW = stage.getWidth();
+				var sH = stage.getHeight();
+				var centerX = sW / 2;
+				var centerY = sH / 2;
+				
+				// Score initialization
+				var score = new Kinetic.Text({
+					fontSize: 150,
+					fontFamily: 'Arial',
+					textStroke: '#999',
+					textStrokeWidth: 2,
+					y: centerY,
+					text: 'score: 0'
+				});
+				score.setX(centerX - score.textWidth / 2);
+				
+				//Player initialization
+				var playerSpeed = 0;
+				var pW = 150;
+				var pH = 30;
+				var playerX = centerX - pW / 2;
+				var player = new Kinetic.Rect({
+					width: pW,
+					height: pH,
+					fill: '#222',
+					x: centerX - pW / 2,
+					y: sH - pH
+				});
+				
+				// Ball initialization
+				var radius = 15;
+				var speedX = Math.random() * 5 + 5;
+				var speedY = - (Math.random() * 5 + 5);
+				var ball = new Kinetic.Circle({
+					radius: radius,
+					fill: '#f00',
+					x: centerX,
+					y: sH - radius - pH
+				});
+				
+				// Bricks initialization
+				var bricks = [];
+				var lines = 8;
+				var width = 70;
+				var height = 25 * Math.max(0.8, Math.min(1, sH / 690));
+				var margin = 5;
+				var lineLimit = sW / (width + margin) << 0;
+				var len = lineLimit * lines;
+				
+				for(var i = 0; i < len; i++) {
+					var x = (width + margin) * (i % lineLimit) << 0;
+					var y = (height + margin) * (i / lineLimit << 0);
+					var c = (Math.random() * 0xFFFFFF << 0).toString(16);
+					
+					var brick = new Kinetic.Rect({
+						width: width,
+						height: height,
+						x: x + margin,
+						y: y + margin,
+						fill: '#'+c
+					});
+					
+					bricks.push(brick);
+					layer.add(brick);
+				}
+				
+				// GameOver screen
+				var gameOver = function() {
+					score.setText('Game over !');
+					score.setX(centerX - score.textWidth / 2);
+					
+					var interval = setInterval(function() {
+						if(!bricks.length) {
+							clearInterval(interval);
+							return false;
+						}
+						
+						var target = Math.random() * bricks.length << 0;
+						
+						bricks[target].transitionTo({
+							y: sH + (Math.random() * 500 + 1000),
+							duration: 1.5,
+							rotation: Math.random() * (Math.PI),
+							easing: 'ease-in'
+						});
+						bricks.splice(target, 1);
+					}, 10);
+				}
+				
+				var setScore = function() {
+					score.setText('score: '+(len - bricks.length));
+					score.setX(centerX - score.textWidth / 2);
+				}
+				
+				// Stage animation
+				var anim = new Kinetic.Animation({
+					func: function(frame) {
+						var bX = ball.attrs.x;
+						var bY = ball.attrs.y;
+						
+						if(bY > sH + radius + 20) {
+							gameOver();
+							anim.stop();
+						}
+						
+						speedX = (bX > sW - radius || bX < radius) ? -speedX : speedX;
+						speedY = (bY < radius) ? -speedY : speedY;
+						
+						if( bX > playerX && bX < playerX + pW && bY > sH - pH - radius && bY < sH + radius) {
+							speedY = -speedY;
+							var pos = (bX - playerX) / (pW / 2) - 1;
+							speedX = 10 * pos;
+						}
+						
+						var nX = bX + speedX;
+						var nY = bY + speedY;
+						
+						for(var i in bricks) {
+							var b = bricks[i];
+							if(nX > b.attrs.x && nX < b.attrs.x + width - margin && nY > b.attrs.y && nY < b.attrs.y + height - margin) {
+								layer.remove(b);
+								bricks.splice(i, 1);
+								speedY = -speedY;
+								setScore();
+							};
+						}
+						
+						playerX += playerSpeed;
+						
+						var toX = player.attrs.x + (playerX - player.attrs.x) * 0.1;
+						
+						player.setX(toX);
+						ball.setX(nX);
+						ball.setY(nY);
+					},
+					node: layer
+				});
+				
+				var touch = 'ontouchstart' in window;
+				
+				document.addEventListener(touch ? 'touchend' : 'click', function() {
+					document.removeEventListener(touch ? 'touchend' : 'click', this);
+					anim.start();
+				});
+				document.addEventListener(touch ? 'touchmove' : 'mousemove', function(e) {
+					var x = touch ? e.targetTouches[0].pageX : e.pageX;
+					
+					playerX = Math.max(0, Math.min(x - pW / 2, sW - pW));
+				});
+				
+				window.onkeydown = function(e) {
+					if({37:-1,39:1}[e.which]) {
+						playerSpeed = {37:-1,39:1}[e.which] * 15;
+					}
+				};
+				window.onkeyup = function() {
+					playerSpeed = 0;
+				};
+				
+				layer.add(score);
+				layer.add(player);
+				layer.add(ball);
+				stage.add(layer);
+			}
+		
+			window.onload = function() {
+				var stage = new Kinetic.Stage({
+					container: 'container',
+					width: window.innerWidth,
+					height: window.innerHeight
+				});
+				var layer = new Kinetic.Layer();
+				
+				manyBricks(stage, layer);
+			}
+		</script>
+	</body>
+</html>

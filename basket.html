@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+        Remove this if you use the .htaccess -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <title>block</title>
+        <meta name="description" content="" />
+        <meta name="author" content="PRO11_6" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <style type="text/css">
+            * { margin: 0; padding: 0;}
+            body {
+                overflow: hidden;
+            }
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic-v4.0.4.js"></script>
+        
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+            Main = Ext.extend(Ext.Base, {
+                autoStart: true,
+                generatorDelay: 2000,
+                score: 0,
+                maxPower: 2,
+                constructor: function() {
+                    Main.superclass.constructor.apply(this, arguments);
+                },
+                
+                initScene: function() {
+                    Main.superclass.initScene.apply(this, arguments);
+                    var me = this;
+                    me.ballRadius = 25;
+                    me.ball = new Kinetic.Circle({
+                        radius: me.ballRadius,
+                        x: me.ballRadius,
+                        y: me.sH - me.ballRadius,
+                        fill: '#f50'
+                    });
+                    
+                    me.power = new Kinetic.Rect({
+                        width: 150,
+                        height: 20,
+                        fill: '#ccc'
+                    });
+                    
+                    me.layer.add(me.power);
+                    me.layer.add(me.ball);
+                },
+                
+                setEvents: function() {
+                    var me = this;
+                    document.addEventListener('mousedown', function() {
+                        me.anim && me.anim.onFinished();
+                        me.startTime = Date.now();
+                    });
+                    
+                    document.addEventListener('mouseup', function() {
+                        me.velocity = Math.min(me.maxPower, ((Date.now() - me.startTime) / 500));
+                        me.startTime = 0;
+                        console.log(me.velocity)
+                        
+                        me.fire(me.mouse.x, me.mouse.y);
+                    });
+                },
+                
+                onFrame: function() {
+                    Main.superclass.onFrame.apply(this, arguments);
+                    var me = this;
+                    
+                    if(me.startTime) {
+                        me.velocity = Math.min(2, ((Date.now() - me.startTime) / 500));
+                        var r = (255 * me.velocity << 0).toString(16);
+                        var g = (255).toString(16);
+                        var b = (0).toString(16);
+                        var c = (r + g + b).toString(16);
+                        
+                        var tc = c.length < 6 ? c+'0' : c;
+                        
+                        me.power.setWidth(me.velocity * 150);
+                        me.power.setFill('#'+tc);
+                    }
+                },
+                
+                fire: function(x, y) {
+                    var me = this;
+                    var br = me.ballRadius;
+                    
+                    me.ball.setX(br);
+                    me.ball.setY(me.sH - br);
+                    me.stage.draw();
+                    
+                    me.anim && me.anim.onFinished();
+                    me.anim = me.ball.transitionTo({
+                        x: me.velocity * me.sW,
+                        duration: 1,
+                        step: function(frame, progress) {
+                            progress = Math.min(1, progress);
+                            var ty = me.sH - Math.abs(Math.sin(progress * Math.PI) * (me.sH - y)) - br;
+                            
+                            me.ball.setY(ty);
+                        },
+                        
+                        callback: function() {
+                            me.anim = me.ball.transitionTo({
+                                easing: 'ease-out',
+                                x: me.ball.attrs.x + 150 * me.velocity,
+                                duration: 0.5
+                            })
+                        }
+                    })
+                }
+            })
+            
+            Ext.onReady(function() {
+                var m = new Main({
+                    stage: new Kinetic.Stage({
+                        width: 800,
+                        height: 480,
+                        container: 'container'
+                    }),
+                    layer: new Kinetic.Layer()
+                });
+            })
+        </script>
+    </body>
+</html>

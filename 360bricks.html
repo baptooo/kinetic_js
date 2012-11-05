@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>360bricks</title>
+		<meta name="description" content="" />
+		<meta name="author" content="PRO11_6" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+	</head>
+	<body>
+		<div id="container"></div>
+        <script type="text/javascript" src="ext-core.js"></script>
+        <script type="text/javascript" src="kinetic-v4.0.1.min.js"></script>
+        <script type="text/javascript">
+        	Ext.ns('Game');
+        	Game.main = Ext.extend(Object, {
+        		autoStart: false,
+        		
+        		constructor: function(config) {
+        			Ext.initialConfig = config;
+	        		Ext.apply(this, config || {});
+        			
+        			this.sW = this.stage.getWidth();
+        			this.sH = this.stage.getHeight();
+        			
+        			this.setPlayer();
+        			
+        			this.setTestBall();
+        			
+        			this.setEvents();
+        			this.setAnimation();
+        			
+        			this.autoStart && this.start();
+        			
+        			this.stage.add(this.layer);
+        		},
+        		
+        		setPlayer: function() {
+        			this.pWidth = 80;
+        			this.pHeight = 5;
+        			this.player = new Kinetic.Rect({
+        				width: this.pWidth,
+        				height: this.pHeight,
+        				x: this.sW / 2,
+        				y: this.sH,
+        				offset: [this.pWidth / 2, 200],
+        				fill: '#f50'
+        			});
+        			
+        			this.layer.add(this.player);
+        		},
+        		
+        		setTestBall: function() {
+        			this.testBall = new Kinetic.Circle({
+        				radius: 20,
+        				x: this.sW / 2,
+        				y: this.sH / 2,
+        				fill: '#f00',
+        				speedX: Math.random() * 2 + 5 << 0,
+        				speedY: Math.random() * 2 + 5 << 0
+        			});
+        			this.layer.add(this.testBall);
+        		},
+        		
+        		setAnimation: function() {
+        			var self = this;
+        			this.mouse = {x:0, y:0};
+        			this.animation = new Kinetic.Animation({
+        				func: function(frame) {
+        					var mouse = self.stage.getMousePosition() || self.mouse;
+        					self.mouse = mouse;
+        					
+        					var p = self.player;
+        					var b = self.testBall;
+        					var rot = Math.atan2(self.mouse.y - p.attrs.y, self.mouse.x - p.attrs.x) + Math.PI / 2;
+        					var pRot = p.attrs.rotation + (rot - p.attrs.rotation) * 0.05;
+        					
+        					if(b.attrs.x < 0 || b.attrs.x > self.sW) b.attrs.speedX = -b.attrs.speedX;
+        					if(b.attrs.y < 0 || b.attrs.y > self.sH) b.attrs.speedY = -b.attrs.speedY;
+        					
+        					if(frame.time > 250 && p.intersects([b.attrs.x, b.attrs.y])) {
+        						b.attrs.speedX = -b.attrs.speedX;
+        						b.attrs.speedY = -b.attrs.speedY;
+        					}
+        					
+        					b.setX(b.attrs.x + b.attrs.speedX);
+        					b.setY(b.attrs.y + b.attrs.speedY);
+        					
+        					p.setRotation(pRot);
+        				},
+        				node: this.layer
+        			});
+        		},
+        		
+        		setEvents: function() {
+        			var self = this;
+        		},
+        		
+        		start: function() {
+        			this.animation && this.animation.start();
+        		},
+        		
+        		stop: function() {
+        			this.animation && this.animation.stop();
+        		}
+        	});
+        	
+            Ext.onReady(function() {
+            	var stage = new Kinetic.Stage({
+                    width: 800,
+                    height: 480,
+                    container: 'container'
+                });
+                var layer = new Kinetic.Layer();
+                var main = new Game.main({
+                	autoStart: true,
+                	stage: stage,
+                	layer: layer
+                });
+            });
+        </script>
+	</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+
+        <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+        Remove this if you use the .htaccess -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+        <title>space</title>
+        <meta name="description" content="" />
+        <meta name="author" content="b.rioscampo" />
+
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <style type="text/css">
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="container"></div>
+        <script type="text/javascript" src="http://kineticjs.com/download/kinetic-v4.0.1.js"></script>
+        <script type="text/javascript">
+            window.onload = function() {
+                function manySpace(stage, layer) {
+                    var sW = stage.getWidth();
+                    var sH = stage.getHeight();
+                    var centerX = sW / 2;
+                    var centerY = sH / 2;
+                    
+                    var shipW = 50;
+                    var shipH = 50;
+                    var ship = new Kinetic.Rect({
+                        width: shipW,
+                        height: shipH,
+                        fill: '#f00',
+                        x: centerX,
+                        y: sH,
+                        offset: [shipW / 2, shipH + 15]
+                    });
+                    
+                    var mW = 3;
+                    var mH = 10;
+                    function sendMissile(rot) {
+                        var mX = ship.attrs.x;
+                        var mY = ship.attrs.y;
+                        var missile = new Kinetic.Rect({
+                            width: mW,
+                            height: mH,
+                            x: mX,
+                            y: mY,
+                            offset: [0, mH + (shipH + 15)],
+                            rotationDeg: rot,
+                            fill: '#000'
+                        });
+                        
+                        layer.add(missile);
+                        
+                        var tX = (rot / (sW / 30)) * sW + pos;
+                        var tY = 0;
+                        
+                        missile.transitionTo({
+                            x: tX,
+                            y: tY,
+                            duration: 0.5,
+                            easing: 'ease-out',
+                            callback: function() {
+                                layer.remove(missile);
+                            }
+                        });
+                    };
+                    
+                    var start = 0;
+                    var direction = 0;
+                    var fyring = false;
+                    window.onkeydown = function(e) {
+                        if({37:-1,39:1}[e.which] && {37:-1,39:1}[e.which] != direction) {
+                            if(!start) start = Date.now();
+                            direction = {37:-1,39:1}[e.which];
+                        }
+                        
+                        if(e.which == 32) {
+                            fyring = true;
+                        }
+                    }
+                    window.onkeyup = function(e) {
+                        if({37:-1,39:1}[e.which]) {
+                            direction = 0;
+                            rotation = 0;
+                            start = 0;
+                        }
+                        
+                        if(e.which == 32) {
+                            fyring = false;
+                        }
+                    }
+                    
+                    var speedDelay = 500;
+                    var speedLimit = 15;
+                    var speed = 0;
+                    var rotation = 0;
+                    var pos = sW / 2;
+                    var angleLimit = 30;
+                    
+                    var anim = new Kinetic.Animation({
+                        func: function(frame) {
+                            rotation = Math.min(angleLimit, Math.max(-angleLimit, rotation + (speed * direction)));
+                            
+                            var elapsed = Date.now() - start;
+                            var value = elapsed / speedDelay;
+                            
+                            speed = Math.min(speedLimit, (speedLimit * value));
+                            var xpos = ship.attrs.x + (pos - ship.attrs.x) * 0.05;
+                            
+                            pos = Math.max(shipW, Math.min(sW - shipW, pos + speed * direction));
+                            
+                            ship.setX(xpos);
+                            
+                            var rot = ship.getRotationDeg() + ((rotation - ship.getRotationDeg()) * 0.05);
+                            ship.setRotationDeg(rot);
+                            
+                            fyring && sendMissile(rot);
+                        },
+                        node: layer
+                    });
+                    
+                    anim.start();
+                    layer.add(ship);
+                    stage.add(layer);
+                }
+                
+                var stage = new Kinetic.Stage({
+                    width: 800,
+                    height: 480,
+                    container: 'container'
+                });
+                var layer = new Kinetic.Layer();
+                
+                manySpace(stage, layer);
+            }
+        </script>
+    </body>
+</html>

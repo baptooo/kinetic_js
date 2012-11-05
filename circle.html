@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+        Remove this if you use the .htaccess -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <title>block</title>
+        <meta name="description" content="" />
+        <meta name="author" content="PRO11_6" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <style type="text/css">
+            * { margin: 0; padding: 0;}
+            body {
+                overflow: hidden;
+            }
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic-v4.0.4.js"></script>
+        
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+            Main = Ext.extend(Ext.Base, {
+                autoStart: true,
+                a: 0,
+                count: 0,
+                constructor: function() {
+                    Main.superclass.constructor.apply(this, arguments);
+                },
+                
+                initScene: function() {
+                	Main.superclass.initScene.apply(this, arguments);
+                	var me = this;
+                	me.circle = new Kinetic.Circle({
+                		x: me.sW / 2,
+                		y: me.sH / 2,
+                		radius: 150,
+                		fill: '#f50'
+                	});
+                	
+                	me.arrow = new Kinetic.Rect({
+                		x: me.sW / 2,
+                		y: me.sH / 2,
+                		width: 200,
+                		height: 16,
+                		fill: '#0f0',
+                		offset: [4, 8]
+                	});
+                	
+                	me.layer.add(me.circle);
+                	me.layer.add(me.arrow);
+                },
+                
+                onFrame: function() {
+                	var me = this;
+                	var a = Math.atan2(me.mouse.y - me.sH / 2, me.mouse.x - me.sW / 2);
+                	
+                	if(Math.abs(a) > Math.PI - 0.1) {
+                		if(a < 0 && me.a > 0) {
+                			me.count++;
+                		}
+                		if(a > 0 && me.a < 0) {
+                			me.count--;
+                		}
+                	}
+                	me.a = a;
+                	
+                	var angle = (a / Math.PI * 180) + 360 * me.count;
+                	var tR = me.arrow.getRotationDeg() + (angle - me.arrow.getRotationDeg()) * 0.05;
+                	me.arrow.setRotationDeg(tR);
+                }
+            })
+            
+            Ext.onReady(function() {
+                var m = new Main({
+                    stage: new Kinetic.Stage({
+                        width: 800,
+                        height: 480,
+                        container: 'container'
+                    }),
+                    layer: new Kinetic.Layer()
+                });
+            })
+        </script>
+    </body>
+</html>
