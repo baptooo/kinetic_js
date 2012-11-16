@@ -115,10 +115,10 @@
                         var sens = i == 0 ? -1 : 1;
                         
                         context.beginPath();
-                        context.moveTo(x + (me.radius - 10) * sens, y);
-                        context.quadraticCurveTo(x + 100 * sens, y - me.radius / 2, mouse.x + 15 * sens, mouse.y);
+                        context.moveTo(x + (me.radius - 5) * sens, y);
+                        context.quadraticCurveTo(x + 100 * sens, y - 15, mouse.x + 15 * sens, mouse.y);
                         context.strokeStyle = "black";
-                        context.lineWidth = 10;
+                        context.lineWidth = 5;
                         context.stroke();
                     }
                 }
