@@ -25,7 +25,7 @@
     <body>
         <div id="container"></div>
         <script type="text/javascript" src="src/ext-core.js"></script>
-        <script type="text/javascript" src="src/kinetic-v4.0.4.js"></script>
+        <script type="text/javascript" src="src/kinetic.latest.js"></script>
         
         <script type="text/javascript" src="src/transitionTo.js"></script>
         <script type="text/javascript" src="src/base.js"></script>
@@ -49,25 +49,8 @@
                         y: me.sH / 2
                     });
                     
-                    me.lArm = new Kinetic.Line({
-                        points: [me.sW / 2 - me.radius, me.sH / 2,me.sW / 2, me.sH / 2],
-                        stroke: 'black',
-                        strokeWidth: 8,
-                        lineCap: 'round'
-                    });
-                    
-                    me.rArm = new Kinetic.Line({
-                        points: [me.sW / 2 + me.radius, me.sH / 2,me.sW / 2, me.sH / 2],
-                        stroke: 'black',
-                        strokeWidth: 8,
-                        lineCap: 'round'
-                    });
-                    
                     me.leftLayer = new Kinetic.Layer();
                     me.rightLayer = new Kinetic.Layer();
-                    
-                    me.leftLayer.add(me.lArm);
-                    me.rightLayer.add(me.rArm);
                     
                     me.layer.add(me.ball);
                     
@@ -79,10 +62,28 @@
                 setEvents: function() {
                     var me = this;
                     document.addEventListener('mousedown', function() {
+                    	me.trans && me.trans.onFinished();
                         me.clicked = true;
                     });
                     document.addEventListener('mouseup', function() {
                         me.clicked = false;
+                        
+                        var mX = me.mouse.x,
+                        	mY = me.mouse.y;
+                        	
+                        me.trans = me.ball.transitionTo({
+                        	x: mX,
+                        	y: mY,
+                        	duration: 0.5,
+                        	easing: 'ease-out',
+                        	step: function(frame, progress) {
+                        		me.setPosition(me.ball.attrs.x, me.ball.attrs.y, {
+                        			x: mX,
+                        			y: mY
+                        		});
+                        	}
+                        });
+                        me.trans.start();
                     });
                 },
                 
@@ -94,30 +95,32 @@
                         return;
                     }
                     
-                    var posX = me.ball.attrs.x + (mouse.x - me.ball.attrs.x) * 0.1;
-                    var posY = me.ball.attrs.y + (mouse.y - me.ball.attrs.y + me.radius * 2) * 0.1;
+                    var x = me.ball.attrs.x + (mouse.x - me.ball.attrs.x) * 0.1;
+                    var y = me.ball.attrs.y + (mouse.y - me.ball.attrs.y + me.radius * 2) * 0.1;
                     
-                    me.ball.setX(posX);
-                    me.ball.setY(posY);
-                    
-                    /*me.lArm.setPoints([posX - me.radius, posY, mouse.x, mouse.y]);
-                    me.rArm.setPoints([posX + me.radius, posY, mouse.x, mouse.y]);*/
+                    me.setPosition(x, y, mouse);
+                },
+                
+                setPosition: function(x, y, mouse) {
+                	var me = this;
+                	me.ball.setX(x);
+                    me.ball.setY(y);
                    
-                   var canvases = [me.leftLayer, me.rightLayer];
-                   for(var i = 0; i < 2; i++) {
-                       var canvas = canvases[i];
-                       
-                       canvas.clear();
-                       var context = canvas.getContext();
-                       var sens = i == 0 ? -1 : 1;
-                       
-                       context.beginPath();
-                       context.moveTo(posX + me.radius * sens, posY);
-                       context.quadraticCurveTo(posX + 80 * sens, posY - me.radius, mouse.x + 15 * sens, mouse.y);
-                       context.strokeStyle = "black";
-                       context.lineWidth = 4;
-                       context.stroke();
-                   }
+                    var canvases = [me.leftLayer, me.rightLayer];
+                    for(var i = 0; i < 2; i++) {
+                        var canvas = canvases[i];
+                        
+                        canvas.clear();
+                        var context = canvas.getContext();
+                        var sens = i == 0 ? -1 : 1;
+                        
+                        context.beginPath();
+                        context.moveTo(x + (me.radius - 10) * sens, y);
+                        context.quadraticCurveTo(x + 100 * sens, y - me.radius / 2, mouse.x + 15 * sens, mouse.y);
+                        context.strokeStyle = "black";
+                        context.lineWidth = 10;
+                        context.stroke();
+                    }
                 }
             });
             

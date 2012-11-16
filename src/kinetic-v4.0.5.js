@@ -1,9 +1,9 @@
 /**
- * KineticJS JavaScript Library v4.0.4
+ * KineticJS JavaScript Library v4.0.5
  * http://www.kineticjs.com/
  * Copyright 2012, Eric Rowell
  * Licensed under the MIT or GPL Version 2 licenses.
- * Date: Oct 19 2012
+ * Date: Nov 04 2012
  *
  * Copyright (C) 2011 - 2012 by Eric Rowell
  *
@@ -29,7 +29,6 @@ var Kinetic = {};
 Kinetic.Filters = {};
 Kinetic.Plugins = {};
 Kinetic.Global = {
-    BUBBLE_WHITELIST: ['mousedown', 'mousemove', 'mouseup', 'mouseover', 'mouseout', 'mouseenter', 'mouseleave', 'click', 'dblclick', 'touchstart', 'touchmove', 'touchend', 'tap', 'dbltap', 'dragstart', 'dragmove', 'dragend'],
     BUFFER_WHITELIST: ['fill', 'stroke', 'textFill', 'textStroke'],
     BUFFER_BLACKLIST: ['shadow'],
     stages: [],
@@ -38,7 +37,11 @@ Kinetic.Global = {
     //shapes hash.  rgb keys and shape values
     shapes: {},
     warn: function(str) {
-        if(console && console.warn) {
+    	/*
+    	 * IE9 on Windows7 64bit will throw a JS error 
+    	 * if we don't use window.console in the conditional
+    	 */
+        if(window.console && console.warn) {
             console.warn('Kinetic warning: ' + str);
         }
     },
@@ -65,20 +68,6 @@ Kinetic.Global = {
     },
     _removeTempNode: function(node) {
         delete this.tempNodes[node._id];
-    }
-};
-
-Kinetic.Filters.Grayscale = function(imageData) {
-    var data = imageData.data;
-    for(var i = 0; i < data.length; i += 4) {
-        var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
-        // red
-        data[i] = brightness;
-        // green
-        data[i + 1] = brightness;
-        // blue
-        data[i + 2] = brightness;
-        // i+3 is alpha (the fourth element)
     }
 };
 
@@ -965,6 +954,61 @@ Kinetic.Collection.prototype.each = function(func) {
 	}
 };
 /**
+ * Grayscale Filter
+ * @function Grayscale
+ * @methodOf Kinetic.Filters
+ */
+Kinetic.Filters.Grayscale = function(imageData, config) {
+    var data = imageData.data;
+    for(var i = 0; i < data.length; i += 4) {
+        var brightness = 0.34 * data[i] + 0.5 * data[i + 1] + 0.16 * data[i + 2];
+        // red
+        data[i] = brightness;
+        // green
+        data[i + 1] = brightness;
+        // blue
+        data[i + 2] = brightness;
+    }
+};
+
+/**
+ * Brighten Filter
+ * @function Brighten
+ * @methodOf Kinetic.Filters
+ * @param {Object} config
+ * @param {Integer} config.val brightness number from -255 to 255.&nbsp; Positive values increase the brightness and negative values decrease the brightness, making the image darker
+ */
+Kinetic.Filters.Brighten = function(imageData, config) {
+    var brightness = config.val || 0;
+    var data = imageData.data;
+    for(var i = 0; i < data.length; i += 4) {
+        // red
+        data[i] += brightness;
+        // green
+        data[i + 1] += brightness;
+        // blue
+        data[i + 2] += brightness;
+    }
+};
+
+/**
+ * Invert Filter
+ * @function Invert
+ * @methodOf Kinetic.Filters
+ */
+Kinetic.Filters.Invert = function(imageData, config) {
+    var data = imageData.data;
+    for(var i = 0; i < data.length; i += 4) {
+        // red
+        data[i] = 255 - data[i];
+        // green
+        data[i + 1] = 255 - data[i + 1];
+        // blue
+        data[i + 2] = 255 - data[i + 2];
+    }
+};
+
+/**
  * Stage constructor.  A stage is used to contain multiple layers and handle
  * animations
  * @constructor
@@ -980,13 +1024,6 @@ Kinetic.Animation = function(config) {
         this[key] = config[key];
     }
 
-    // add frame object
-    this.frame = {
-        time: 0,
-        timeDiff: 0,
-        lastTime: new Date().getTime()
-    };
-
     this.id = Kinetic.Animation.animIdCounter++;
 };
 /*
@@ -1000,7 +1037,6 @@ Kinetic.Animation.prototype = {
      */
     start: function() {
         this.stop();
-        this.frame.lastTime = new Date().getTime();
         Kinetic.Animation._addAnimation(this);
         Kinetic.Animation._handleAnimation();
     },
@@ -1016,6 +1052,17 @@ Kinetic.Animation.prototype = {
 Kinetic.Animation.animations = [];
 Kinetic.Animation.animIdCounter = 0;
 Kinetic.Animation.animRunning = false;
+Kinetic.Animation.frame = {
+    time: 0,
+    timeDiff: 0,
+    lastTime: new Date().getTime(),
+    frameRate: 0
+};
+
+Kinetic.Animation.fixedRequestAnimFrame = function(callback) {
+    window.setTimeout(callback, 1000 / 60);
+};
+
 Kinetic.Animation._addAnimation = function(anim) {
     this.animations.push(anim);
 };
@@ -1025,17 +1072,19 @@ Kinetic.Animation._removeAnimation = function(anim) {
     for(var n = 0; n < animations.length; n++) {
         if(animations[n].id === id) {
             this.animations.splice(n, 1);
-            return false;
+            break;
         }
     }
 };
-Kinetic.Animation._updateFrameObject = function(anim) {
+Kinetic.Animation._updateFrameObject = function() {
     var time = new Date().getTime();
-    anim.frame.timeDiff = time - anim.frame.lastTime;
-    anim.frame.lastTime = time;
-    anim.frame.time += anim.frame.timeDiff;
+    this.frame.timeDiff = time - this.frame.lastTime;
+    this.frame.lastTime = time;
+    this.frame.time += this.frame.timeDiff;
+    this.frame.frameRate = 1000 / this.frame.timeDiff;
 };
 Kinetic.Animation._runFrames = function() {
+    this._updateFrameObject();
     var nodes = {};
     /*
      * loop through all animations and execute animation
@@ -1046,13 +1095,12 @@ Kinetic.Animation._runFrames = function() {
      */
     for(var n = 0; n < this.animations.length; n++) {
         var anim = this.animations[n];
-        this._updateFrameObject(anim);
         if(anim.node && anim.node._id !== undefined) {
             nodes[anim.node._id] = anim.node;
         }
         // if animation object has a function, execute it
         if(anim.func) {
-            anim.func(anim.frame);
+            anim.func(this.frame);
         }
     }
 
@@ -1064,7 +1112,7 @@ Kinetic.Animation._animationLoop = function() {
     if(this.animations.length > 0) {
         this._runFrames();
         var that = this;
-        requestAnimFrame(function() {
+        Kinetic.Animation.requestAnimFrame(function() {
             that._animationLoop();
         });
     }
@@ -1079,12 +1127,11 @@ Kinetic.Animation._handleAnimation = function() {
         that._animationLoop();
     }
 };
-requestAnimFrame = (function(callback) {
-    return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
-    function(callback) {
-        window.setTimeout(callback, 1000 / 60);
-    };
-})();
+Kinetic.Animation.requestAnimFrame = function(callback) {
+    var raf = Kinetic.DD && Kinetic.DD.moving ? this.fixedRequestAnimFrame : window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || Kinetic.Animation.fixedRequestAnimFrame;
+    
+    raf(callback);
+};
 
 /**
  * Node constructor.&nbsp; Nodes are entities that can be transformed, layered,
@@ -1317,17 +1364,30 @@ Kinetic.Node.prototype = {
         }
     },
     /**
-     * determine if shape is visible or not.  Shape is visible only
+     * determine if node is visible or not.  Node is visible only
      *  if it's visible and all of its ancestors are visible.  If an ancestor
-     *  is invisible, this means that the shape is also invisible
-     * @name isVisible
+     *  is invisible, this means that the node is also invisible
+     * @name getVisible
      * @methodOf Kinetic.Node.prototype
      */
-    isVisible: function() {
-        if(this.attrs.visible && this.getParent() && !this.getParent().isVisible()) {
+    getVisible: function() {
+        if(this.attrs.visible && this.getParent() && !this.getParent().getVisible()) {
             return false;
         }
         return this.attrs.visible;
+    },
+    /**
+     * determine if node is listening or not.  Node is listening only
+     *  if it's listening and all of its ancestors are listening.  If an ancestor
+     *  is not listening, this means that the node is also not listening
+     * @name getVisible
+     * @methodOf Kinetic.Node.prototype
+     */
+    getListening: function() {
+        if(this.attrs.listening && this.getParent() && !this.getParent().getListening()) {
+            return false;
+        }
+        return this.attrs.listening;
     },
     /**
      * show node
@@ -1677,13 +1737,24 @@ Kinetic.Node.prototype = {
         }
     },
     /**
-     * simulate event
+     * simulate event with event bubbling
      * @name simulate
      * @methodOf Kinetic.Node.prototype
      * @param {String} eventType
+     * @param {EventObject} evt event object
      */
-    simulate: function(eventType) {
-        this._handleEvent(eventType, {});
+    simulate: function(eventType, evt) {
+        this._handleEvent(eventType, evt || {});
+    },
+    /**
+     * synthetically fire an event.&nbsp; The event object will not bubble up the Node tree.&nbsp; You can also pass in custom properties
+     * @name fire
+     * @methodOf Kinetic.Node.prototype
+     * @param {String} eventType
+     * @param {Object} obj optional object which can be used to pass parameters
+     */
+    fire: function(eventType, obj) {
+        this._executeHandlers(eventType, obj || {});
     },
     /**
      * get absolute transform of the node which takes into
@@ -1807,7 +1878,7 @@ Kinetic.Node.prototype = {
      * converts node into an image.  Since the toImage
      *  method is asynchronous, a callback is required
      * @name toImage
-     * @methodOf Kinetic.Stage.prototype
+     * @methodOf Kinetic.Node.prototype
      * @param {Object} config
      * @param {Function} callback since the toImage() method is asynchonrous, the
      *  resulting image object is passed into the callback function
@@ -1973,7 +2044,7 @@ Kinetic.Node.prototype = {
      * handle node event
      */
     _handleEvent: function(eventType, evt, compareShape) {
-        if(this.nodeType === 'Shape') {
+        if(evt && this.nodeType === 'Shape') {
             evt.shape = this;
         }
         var stage = this.getStage();
@@ -1989,14 +2060,11 @@ Kinetic.Node.prototype = {
 
         if(okayToRun) {
             if(el[eventType]) {
-                var events = el[eventType];
-                for(var i = 0; i < events.length; i++) {
-                    events[i].handler.apply(this, [evt]);
-                }
+                this.fire(eventType, evt);
             }
 
             // simulate event bubbling
-            if(Kinetic.Global.BUBBLE_WHITELIST.indexOf(eventType) >= 0 && !evt.cancelBubble && this.parent) {
+            if(evt && !evt.cancelBubble && this.parent) {
                 if(compareShape && compareShape.parent) {
                     this._handleEvent.call(this.parent, eventType, evt, compareShape.parent);
                 }
@@ -2004,6 +2072,12 @@ Kinetic.Node.prototype = {
                     this._handleEvent.call(this.parent, eventType, evt);
                 }
             }
+        }
+    },
+    _executeHandlers: function(eventType, evt) {
+        var events = this.eventListeners[eventType];
+        for(var i = 0; i < events.length; i++) {
+            events[i].handler.apply(this, [evt]);
         }
     },
     _shouldDraw: function(canvas) {
@@ -2089,17 +2163,23 @@ Kinetic.Node._createNode = function(obj, container) {
     return no;
 };
 // add getters setters
-Kinetic.Node.addGettersSetters(Kinetic.Node, ['x', 'y', 'rotation', 'opacity', 'name', 'id', 'listening', 'visible']);
+Kinetic.Node.addGettersSetters(Kinetic.Node, ['x', 'y', 'rotation', 'opacity', 'name', 'id']);
 Kinetic.Node.addGetters(Kinetic.Node, ['scale', 'offset']);
-Kinetic.Node.addSetters(Kinetic.Node, ['width', 'height']);
+Kinetic.Node.addSetters(Kinetic.Node, ['width', 'height', 'listening', 'visible']);
 
 // mappings
 /**
- * determine if listening to events or not.  Alias of getListening()
+ * Alias of getListening()
  * @name isListening
  * @methodOf Kinetic.Node.prototype
  */
 Kinetic.Node.prototype.isListening = Kinetic.Node.prototype.getListening;
+/**
+ * Alias of getVisible()
+ * @name isVisible
+ * @methodOf Kinetic.Node.prototype
+ */
+Kinetic.Node.prototype.isVisible = Kinetic.Node.prototype.getVisible;
 
 // collection mappings
 (function() {
@@ -2226,12 +2306,6 @@ Kinetic.Node.prototype.isListening = Kinetic.Node.prototype.getListening;
 /**
  * determine if listening to events or not
  * @name getListening
- * @methodOf Kinetic.Node.prototype
- */
-
-/**
- * determine if visible or not
- * @name getVisible
  * @methodOf Kinetic.Node.prototype
  */
 Kinetic.DD = {
@@ -2526,10 +2600,7 @@ Kinetic.Node.prototype.transitionTo = function(config) {
     var that = this;
     var trans = new Kinetic.Transition(this, config);
 
-    this.transAnim.func = function(frame) {
-        var frameTime = frame.time - (that.oldTime || 0);
-    	// TODO: transitionTo evolution, adding step callback function
-    	config.step && config.step.apply(config, Array.prototype.slice.call(arguments).concat([frameTime / (config.duration * 1000)]));
+    this.transAnim.func = function() {
         trans._onEnterFrame();
     };
     this.transAnim.node = node;
@@ -2538,9 +2609,7 @@ Kinetic.Node.prototype.transitionTo = function(config) {
     trans.onFinished = function() {
         // remove animation
         that.transAnim.stop();
-        that.transAnim.node.draw();
-        that.oldTime = that.transAnim.frame.time;
-
+        
         // callback
         if(config.callback) {
             config.callback();
@@ -4661,7 +4730,7 @@ Kinetic.Image.prototype = {
         context.drawImage(this.attrs.image, 0, 0);
         try {
             var imageData = context.getImageData(0, 0, canvas.getWidth(), canvas.getHeight());
-            config.filter(imageData, config);
+            config.filter(imageData, config.config);
             var that = this;
             Kinetic.Type._getImage(imageData, function(imageObj) {
                 that.setImage(imageObj);
@@ -4671,7 +4740,7 @@ Kinetic.Image.prototype = {
                 }
             });
         } catch(e) {
-            Kinetic.Global.warn('Unable to apply filter.');
+            Kinetic.Global.warn('Unable to apply filter. ' + e.message);
         }
     },
     /**
@@ -5343,7 +5412,7 @@ Kinetic.Sprite.prototype = {
             index: 0,
             frameRate: 17
         });
-
+		this.shapeType = "Sprite";
         config.drawFunc = this.drawFunc;
         // call super constructor
         Kinetic.Shape.call(this, config);

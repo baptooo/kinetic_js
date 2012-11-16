@@ -1,4 +1,4 @@
-Kinetic.Node.prototype.transitionTo = function(config) {
+var transitionTo = function(config) {
     if(!this.transAnim) {
         this.transAnim = new Kinetic.Animation();
     }
@@ -8,10 +8,11 @@ Kinetic.Node.prototype.transitionTo = function(config) {
     var node = this.nodeType === 'Stage' ? this : this.getLayer();
     var that = this;
     var trans = new Kinetic.Transition(this, config);
+    var start = new Date().getTime();
 
     this.transAnim.func = function(frame) {
-    	// TODO: transitionTo evolution, adding step callback function
-    	config.step && config.step.apply(config, Array.prototype.slice.call(arguments).concat([frame.time / (config.duration * 1000)]));
+    	var frameTime = frame.lastTime - start;
+    	config.step && config.step.apply(config, Array.prototype.slice.call(arguments).concat(Math.min(1, [frameTime / (config.duration * 1000)])));
         trans._onEnterFrame();
     };
     this.transAnim.node = node;
@@ -20,8 +21,7 @@ Kinetic.Node.prototype.transitionTo = function(config) {
     trans.onFinished = function() {
         // remove animation
         that.transAnim.stop();
-        that.transAnim.node.draw();
-
+        
         // callback
         if(config.callback) {
             config.callback();
@@ -33,6 +33,8 @@ Kinetic.Node.prototype.transitionTo = function(config) {
     return trans;
 };
 
-Kinetic.Global.extend(Kinetic.Circle, {
-	transitionTo: null
-});
+// Ugly...
+for(var i in Kinetic) {
+	if(!Kinetic.hasOwnProperty(i) || !Kinetic[i].prototype) continue;
+	Kinetic[i].prototype.transitionTo = transitionTo;
+};
