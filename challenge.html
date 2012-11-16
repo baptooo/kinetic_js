@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+        Remove this if you use the .htaccess -->
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <title>block</title>
+        <meta name="description" content="" />
+        <meta name="author" content="PRO11_6" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <style type="text/css">
+            * { margin: 0; padding: 0;}
+            body {
+                overflow: hidden;
+            }
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic-v4.0.4.js"></script>
+        
+        <script type="text/javascript" src="src/transitionTo.js"></script>
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+            Main = Ext.extend(Ext.Base, {
+                autoStart: true,
+                clicked: false,
+                constructor: function() {
+                    Main.superclass.constructor.apply(this, arguments);
+                },
+                
+                initScene: function() {
+                    Main.superclass.initScene.apply(this, arguments);
+                    var me = this;
+                    
+                    me.radius = 60;
+                    me.ball = new Kinetic.Circle({
+                        radius: me.radius,
+                        fill: '#000',
+                        x: me.sW / 2,
+                        y: me.sH / 2
+                    });
+                    
+                    me.lArm = new Kinetic.Line({
+                        points: [me.sW / 2 - me.radius, me.sH / 2,me.sW / 2, me.sH / 2],
+                        stroke: 'black',
+                        strokeWidth: 8,
+                        lineCap: 'round'
+                    });
+                    
+                    me.rArm = new Kinetic.Line({
+                        points: [me.sW / 2 + me.radius, me.sH / 2,me.sW / 2, me.sH / 2],
+                        stroke: 'black',
+                        strokeWidth: 8,
+                        lineCap: 'round'
+                    });
+                    
+                    me.leftLayer = new Kinetic.Layer();
+                    me.rightLayer = new Kinetic.Layer();
+                    
+                    me.leftLayer.add(me.lArm);
+                    me.rightLayer.add(me.rArm);
+                    
+                    me.layer.add(me.ball);
+                    
+                    me.stage.add(me.layer);
+                    me.stage.add(me.leftLayer);
+                    me.stage.add(me.rightLayer)
+                },
+                
+                setEvents: function() {
+                    var me = this;
+                    document.addEventListener('mousedown', function() {
+                        me.clicked = true;
+                    });
+                    document.addEventListener('mouseup', function() {
+                        me.clicked = false;
+                    });
+                },
+                
+                onFrame: function(frame) {
+                    var me = this,
+                        mouse = me.stage.getMousePosition() || me.mouse;
+                        
+                    if(!me.clicked) {
+                        return;
+                    }
+                    
+                    var posX = me.ball.attrs.x + (mouse.x - me.ball.attrs.x) * 0.1;
+                    var posY = me.ball.attrs.y + (mouse.y - me.ball.attrs.y + me.radius * 2) * 0.1;
+                    
+                    me.ball.setX(posX);
+                    me.ball.setY(posY);
+                    
+                    /*me.lArm.setPoints([posX - me.radius, posY, mouse.x, mouse.y]);
+                    me.rArm.setPoints([posX + me.radius, posY, mouse.x, mouse.y]);*/
+                   
+                   var canvases = [me.leftLayer, me.rightLayer];
+                   for(var i = 0; i < 2; i++) {
+                       var canvas = canvases[i];
+                       
+                       canvas.clear();
+                       var context = canvas.getContext();
+                       var sens = i == 0 ? -1 : 1;
+                       
+                       context.beginPath();
+                       context.moveTo(posX + me.radius * sens, posY);
+                       context.quadraticCurveTo(posX + 80 * sens, posY - me.radius, mouse.x + 15 * sens, mouse.y);
+                       context.strokeStyle = "black";
+                       context.lineWidth = 4;
+                       context.stroke();
+                   }
+                }
+            });
+            
+            Ext.onReady(function() {
+                var m = new Main({
+                    stage: new Kinetic.Stage({
+                        width: window.innerWidth,
+                        height: 480,
+                        container: 'container'
+                    }),
+                    layer: new Kinetic.Layer()
+                });
+            });
+        </script>
+    </body>
+</html>
