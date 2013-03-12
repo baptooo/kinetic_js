@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>360bricks</title>
+		<meta name="description" content="" />
+		<meta name="author" content="PRO11_6" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+	</head>
+	<body>
+		<div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic.latest.js"></script>
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+        	Ext.ns('Game');
+        	
+        	Game.Main = Ext.extend(Ext.Base, {
+        		constructor: function() {
+        			Game.Main.superclass.constructor.apply(this, arguments);
+        		},
+        		
+        		initScene: function() {
+        			var me = this;
+        			Game.Main.superclass.initScene.apply(me, arguments);
+        			
+        			me.ball = new Kinetic.Circle({
+        				radius: 25,
+        				fill: '#f50',
+        			});
+        			
+        			me.plate = new Kinetic.Ellipse({
+        				radius: {
+        					x: 150,
+        					y: 75
+        				},
+        				fill: '#0f5',
+        				scaley: 0.5,
+        				x: me.sW / 2,
+        				y: me.sH / 2 + 20
+        			})
+        			
+        			me.layer.add(me.plate);
+        			me.layer.add(me.ball);
+        		},
+        		
+        		onFrame: function(frame) {
+        			var me = this;
+        			
+        			var t = Date.now() + frame.time,
+        				p = t / 1500 * Math.PI;
+        			
+        			var x = Math.cos(p) * 150 + me.sW / 2;
+        			var y = Math.sin(p) * 75 + me.sH / 2;
+        			var s = Math.sin(p) * 0.4 + 1.2;
+        			
+        			me.ball.setX(x);
+        			me.ball.setY(y);
+        			me.ball.setScale(s);
+        			
+        			s = -Math.sin(p) * 0.02 + 1;
+        			
+        			me.plate.setScale(s);
+        		}
+        	})
+        	
+            Ext.onReady(function() {
+            	var stage = new Kinetic.Stage({
+                    width: 800,
+                    height: 480,
+                    container: 'container'
+                });
+                var layer = new Kinetic.Layer();
+                var main = new Game.Main({
+                	autoStart: true,
+                	stage: stage,
+                	layer: layer
+                });
+            });
+        </script>
+	</body>
+</html>

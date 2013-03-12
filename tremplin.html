@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>360bricks</title>
+		<meta name="description" content="" />
+		<meta name="author" content="PRO11_6" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+            canvas {
+                border: 1px solid red;
+            }
+        </style>
+	</head>
+	<body>
+		<div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic.latest.js"></script>
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+        	Ext.ns('Game');
+        	
+        	Game.Main = Ext.extend(Ext.Base, {
+        		addBallDelay: 1500,
+        		totalBalls: 0,
+        		constructor: function() {
+        			Game.Main.superclass.constructor.apply(this, arguments);
+        			
+        			var me = this;
+        			me.balls = [];
+        		},
+        		
+        		initScene: function() {
+        			Game.Main.superclass.initScene.apply(this, arguments);
+        			
+        			var me = this;
+        			
+        			me.player = new Kinetic.Rect({
+        				width: 150,
+        				height: 50,
+        				x: me.sW / 2,
+        				y: me.sH - 50,
+        				offset: [75, 0],
+        				fill: '#f50'
+        			});
+        			
+        			me.layer.add(me.player);
+        		},
+        		
+        		addBall: function() {
+        			var me = this;
+        			
+        			var ball = new Kinetic.Circle({
+        				radius: 15,
+        				fill: '#f00',
+        				x: Math.random() * me.sW,
+        				y: 0
+        			});
+        			me.layer.add(ball);
+        			
+        			ball.transitionTo({
+        				y: me.sH + 5,
+        				duration: Math.max(0.5, (1 - me.totalBalls / 50) * 2)
+        			});
+        			me.balls.push(ball);
+        			
+        			me.totalBalls++;
+        		},
+        		
+        		ballHitsPlayer: function(ball, player) {
+        			var bX = ball.getX(),
+        				bY = ball.getY();
+        				
+    				if(player.intersects([bX, bY])) {
+    					return true;
+    				}
+    				
+        			return false;
+        		},
+        		
+        		onFrame: function(frame) {
+        			var me = this,
+        				mouse = me.mouse,
+        				progress = frame.time / me.addBallDelay << 0;
+        				
+    				var x = me.player.getX() + (mouse.x - me.player.getX()) * 0.08;
+    				
+    				if(progress > me.totalBalls) {
+    					me.addBall();
+    				}
+    				
+    				for(var i in me.balls) {
+    					if(!me.balls.hasOwnProperty(i)) continue;
+    					var ball = me.balls[i];
+    					if(me.ballHitsPlayer(ball, me.player)) {
+    						ball.remove();
+    						me.balls.splice(i, 1);
+    					}
+    				}
+    				
+    				me.player.setX(x);
+        		}
+        	});
+        	
+            Ext.onReady(function() {
+            	var stage = new Kinetic.Stage({
+                    width: 800,
+                    height: 480,
+                    container: 'container'
+                });
+                var layer = new Kinetic.Layer();
+                var main = new Game.Main({
+                	autoStart: true,
+                	stage: stage,
+                	layer: layer
+                });
+            });
+        </script>
+	</body>
+</html>
