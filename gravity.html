@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<title>Gravity</title>
+		<meta name="description" content="" />
+		<meta name="author" content="PRO11_6" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+			* { margin: 0; padding: 0;}
+			html, body {
+				overflow: hidden;
+			}
+        </style>
+	</head>
+	<body>
+		<div id="container"></div>
+        <script type="text/javascript" src="src/ext-core.js"></script>
+        <script type="text/javascript" src="src/kinetic.latest.js"></script>
+        <script type="text/javascript" src="src/base.js"></script>
+        <script type="text/javascript">
+        	Game = Ext.extend(Ext.Base, {
+        		initScene: function() {
+        			var me = this;
+        			Game.superclass.initScene.apply(me, arguments);
+        			
+        			me.balls = [];
+        			
+        			me.len = 10;
+        			for(var i = 0; i < me.len; i++) {
+        				var b = new Kinetic.Circle({
+        					radius: i == 0 ? 30 : 15,
+        					fill: '#f50',
+        					x: me.sW / 2,
+        					y: me.sH / 2
+        				});
+        				me.balls.push(b);
+        				me.layer.add(b);
+        			}
+        		},
+        		
+        		toPos: {
+        			x: 0,
+        			y: 0
+        		},
+        		
+        		onFrame: function(frame) {
+        			var me = this;
+        			
+    				var mouse = me.mouse,
+        				len = me.len,
+        				balls = me.balls;
+        			
+    				// TMP moves
+    				for(var i = 0; i < len; i++) {
+    					var b = balls[i],
+    						ref = i == 0 ? mouse : balls[i - 1];
+    					
+    					//var speed = (len - Math.min(i / 2, i)) / len * 0.8;
+    					var speed = 0.2;
+    					var x = i == 0 ? mouse.x : b.getX() + (ref.getX() - b.getX()) * speed;
+    					var y = i == 0 ? mouse.y : b.getY() + (ref.getY() - b.getY()) * speed;
+    					
+    					b.setX(x);
+    					b.setY(y);
+    				}
+        		}
+        	});
+        	
+            Ext.onReady(function() {
+            	var stage = new Kinetic.Stage({
+            		container: 'container',
+            		width: window.innerWidth,
+            		height: window.innerHeight
+            	});
+            	var layer = new Kinetic.Layer();
+            	var game = new Game({
+            		autoStart: true,
+            		stage: stage,
+            		layer: layer
+            	})
+            });
+        </script>
+	</body>
+</html>

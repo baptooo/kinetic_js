@@ -44,13 +44,10 @@ Ext.Base = Ext.extend(Object, {
 		var me = this;
 		me.animation && me.animation.stop();
 		me.mouse = me.mouse || {x: 0, y: 0};
-		me.animation = new Kinetic.Animation({
-			func: function() {
-				me.mouse = me.stage.getMousePosition() || me.mouse;
-				me.onFrame.apply(me, arguments);
-			},
-			node: me.layer
-		});
+		me.animation = new Kinetic.Animation(function() {
+			me.mouse = me.stage.getPointerPosition() || me.mouse;
+			me.onFrame.apply(me, arguments);
+		}, me.layer)
 		me.animation.start();
 	},
 	
