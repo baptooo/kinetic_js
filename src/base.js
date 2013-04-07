@@ -5,6 +5,8 @@ Ext.Base = Ext.extend(Object, {
 	sW: undefined,
 	// stage height
 	sH: undefined,
+	// get the mouse automaticaly
+	autoMouse: true,
 	
 	constructor: function(config) {
 		Ext.initialConfig = config;
@@ -45,7 +47,7 @@ Ext.Base = Ext.extend(Object, {
 		me.animation && me.animation.stop();
 		me.mouse = me.mouse || {x: 0, y: 0};
 		me.animation = new Kinetic.Animation(function() {
-			me.mouse = me.stage.getPointerPosition() || me.mouse;
+			if(me.autoMouse) me.mouse = me.stage.getPointerPosition() || me.mouse;
 			me.onFrame.apply(me, arguments);
 		}, me.layer)
 		me.animation.start();

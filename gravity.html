@@ -45,6 +45,23 @@
         			}
         		},
         		
+        		setEvents: function() {
+        			if(!('ontouchstart' in window)) {
+        				return;
+        			}
+        			var me = this;
+        			me.autoMouse = false;
+        			window.addEventListener('deviceorientation', function(e) {
+        				var x = e.beta;
+        				var y = - e.gamma - 1.5;
+        				
+        				me.mouse.x = Math.round((x / 25 * me.sW / 2) + me.sW / 2);
+        				me.mouse.y = Math.round((y / 25 * me.sH / 2) + me.sH / 2);
+        				
+        				//document.body.innerHTML = me.mouse.y;
+        			});
+        		},
+        		
         		toPos: {
         			x: 0,
         			y: 0
@@ -56,7 +73,7 @@
     				var mouse = me.mouse,
         				len = me.len,
         				balls = me.balls;
-        			
+        				
     				// TMP moves
     				for(var i = 0; i < len; i++) {
     					var b = balls[i],
@@ -64,8 +81,11 @@
     					
     					//var speed = (len - Math.min(i / 2, i)) / len * 0.8;
     					var speed = 0.2;
-    					var x = i == 0 ? mouse.x : b.getX() + (ref.getX() - b.getX()) * speed;
-    					var y = i == 0 ? mouse.y : b.getY() + (ref.getY() - b.getY()) * speed;
+    					/*var x = i == 0 ? mouse.x : b.getX() + (ref.getX() - b.getX()) * speed;
+    					var y = i == 0 ? mouse.y : b.getY() + (ref.getY() - b.getY()) * speed;*/
+    					
+    					var x = b.getX() + ((i == 0 ? mouse.x : ref.getX()) - b.getX()) * speed;
+    					var y = b.getY() + ((i == 0 ? mouse.y : ref.getY()) - b.getY()) * speed;
     					
     					b.setX(x);
     					b.setY(y);

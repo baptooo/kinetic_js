@@ -53,16 +53,13 @@
 				var amplitude = 150;
 				var period = 1500;
 				
-				var anim = new Kinetic.Animation({
-					func: function(frame) {
-						for(var i in squares) {
-							var posX = amplitude * Math.sin(frame.time * 2 * Math.PI / squares[i].attrs.period);
-							squares[i].setX(posX + squares[i].attrs.origX);
-							//squares[i].setY(posX + stage.getHeight() / 2);
-						}
-					},
-					node: layer
-				});
+				var anim = new Kinetic.Animation(function(frame) {
+					for(var i in squares) {
+						var posX = amplitude * Math.sin(frame.time * 2 * Math.PI / squares[i].attrs.period);
+						squares[i].setX(posX + squares[i].attrs.origX);
+						//squares[i].setY(posX + stage.getHeight() / 2);
+					}
+				}, layer);
 				anim.start();
 				stage.add(layer);
 			};
@@ -97,22 +94,19 @@
 					val = ((e.pageX - sW / 2) / sW) * 0.1;
 				}
 				
-				var anim = new Kinetic.Animation({
-					func: function(frame) {
-						alpha += val;
-						for(var i in circles) {
-							var posX = centerX + Math.cos(i * gap + alpha) * 250;
-							var posY = centerY + Math.sin(i * gap + alpha) * 80;
-							var scale = Math.sin(i * gap + alpha) * 0.4 + 1;
-							
-							circles[i].setX(posX);
-							circles[i].setY(posY);
-							circles[i].setScale(scale);
-							circles[i].setOpacity(scale - 0.5);
-						}
-					},
-					node: layer
-				});
+				var anim = new Kinetic.Animation(function(frame) {
+					alpha += val;
+					for(var i in circles) {
+						var posX = centerX + Math.cos(i * gap + alpha) * 250;
+						var posY = centerY + Math.sin(i * gap + alpha) * 80;
+						var scale = Math.sin(i * gap + alpha) * 0.4 + 1;
+						
+						circles[i].setX(posX);
+						circles[i].setY(posY);
+						circles[i].setScale(scale);
+						circles[i].setOpacity(scale - 0.5);
+					}
+				}, layer);
 				
 				anim.start();
 				stage.add(layer);
@@ -215,48 +209,45 @@
 				}
 				
 				// Stage animation
-				var anim = new Kinetic.Animation({
-					func: function(frame) {
-						var bX = ball.attrs.x;
-						var bY = ball.attrs.y;
-						
-						if(bY > sH + radius + 20) {
-							gameOver();
-							anim.stop();
-						}
-						
-						speedX = (bX > sW - radius || bX < radius) ? -speedX : speedX;
-						speedY = (bY < radius) ? -speedY : speedY;
-						
-						if( bX > playerX && bX < playerX + pW && bY > sH - pH - radius && bY < sH + radius) {
+				var anim = new Kinetic.Animation(function(frame) {
+					var bX = ball.attrs.x;
+					var bY = ball.attrs.y;
+					
+					if(bY > sH + radius + 20) {
+						gameOver();
+						anim.stop();
+					}
+					
+					speedX = (bX > sW - radius || bX < radius) ? -speedX : speedX;
+					speedY = (bY < radius) ? -speedY : speedY;
+					
+					if( bX > playerX && bX < playerX + pW && bY > sH - pH - radius && bY < sH + radius) {
+						speedY = -speedY;
+						var pos = (bX - playerX) / (pW / 2) - 1;
+						speedX = 10 * pos;
+					}
+					
+					var nX = bX + speedX;
+					var nY = bY + speedY;
+					
+					for(var i in bricks) {
+						var b = bricks[i];
+						if(nX > b.attrs.x && nX < b.attrs.x + width - margin && nY > b.attrs.y && nY < b.attrs.y + height - margin) {
+							layer.remove(b);
+							bricks.splice(i, 1);
 							speedY = -speedY;
-							var pos = (bX - playerX) / (pW / 2) - 1;
-							speedX = 10 * pos;
-						}
-						
-						var nX = bX + speedX;
-						var nY = bY + speedY;
-						
-						for(var i in bricks) {
-							var b = bricks[i];
-							if(nX > b.attrs.x && nX < b.attrs.x + width - margin && nY > b.attrs.y && nY < b.attrs.y + height - margin) {
-								layer.remove(b);
-								bricks.splice(i, 1);
-								speedY = -speedY;
-								setScore();
-							};
-						}
-						
-						playerX += playerSpeed;
-						
-						var toX = player.attrs.x + (playerX - player.attrs.x) * 0.1;
-						
-						player.setX(toX);
-						ball.setX(nX);
-						ball.setY(nY);
-					},
-					node: layer
-				});
+							setScore();
+						};
+					}
+					
+					playerX += playerSpeed;
+					
+					var toX = player.attrs.x + (playerX - player.attrs.x) * 0.1;
+					
+					player.setX(toX);
+					ball.setX(nX);
+					ball.setY(nY);
+				}, layer);
 				
 				var touch = 'ontouchstart' in window;
 				
