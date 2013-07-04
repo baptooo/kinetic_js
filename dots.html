@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+
+		<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+		Remove this if you use the .htaccess -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+		<title>Dots</title>
+		<meta name="description" content="" />
+		<meta name="author" content="baptooo" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<!-- Replace favicon.ico & apple-touch-icon.png in the root of your domain and delete these references -->
+		<link rel="shortcut icon" href="/favicon.ico" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<style type="text/css">
+		    .rule {
+		        position: absolute;
+		    }
+		</style>
+	</head>
+
+	<body>
+	    <p class="rule">Double click to add dots that you can drag & drop</p>
+		<div id="container"></div>
+		
+		
+		<script type="text/javascript" src="src/ext-core.js"></script>
+		<script type="text/javascript" src="src/kinetic.latest.js"></script>
+		<script type="text/javascript" src="src/base.js"></script>
+		<script type="text/javascript">
+			Game = Ext.extend(Ext.Base, {
+			    progress: 0,
+				constructor: function() {
+					Game.superclass.constructor.apply(this, arguments);
+				},
+				
+				initScene: function() {
+				    Game.superclass.initScene.apply(this, arguments);
+					var me = this;
+					me.balls = [];
+					
+					me.line = new Kinetic.Line({
+					    points: [0,0,10,10],
+					    stroke: 'red',
+					    strokeWidth: 10
+					});
+					
+					me.layer.add(me.line);
+				},
+				
+				setEvents: function() {
+				    var me = this;
+				    window.ondblclick = function() {
+				        me.addBall(me.mouse.x, me.mouse.y);
+				    }
+				},
+				
+				addBall: function(x, y) {
+				    var me = this,
+				        ballSize = 25,
+				        sY = y / me.sH * ballSize;
+				        
+				    var b = new Kinetic.Circle({
+				        radius: sY,
+				        fill: 'black',
+				        x: x, y: y,
+				        draggable: true
+				    });
+				    
+				    me.balls.push(b);
+				    me.layer.add(b);
+				},
+				
+				onFrame: function(frame) {
+					var me = this,
+					    balls = me.balls,
+					    bLen = balls.length;
+				    
+				    if(!bLen) return;
+				    
+				    var speed = 0.1,
+				        queueSpeed = 0.1,
+				        oB = balls[(me.progress - 1 + bLen) % bLen],
+				        obX = oB.getX(),
+				        obY = oB.getY(),
+				        b = balls[me.progress],
+				        bX = b.getX(),
+				        bY = b.getY(),
+				        l = me.line,
+				        p = l.getPoints(),
+				        aX = p[0].x,
+				        aY = p[0].y,
+				        nX = p[1].x,
+				        nY = p[1].y;
+				        
+			        var b = balls[me.progress];
+			        
+			        var pX = nX + (bX - nX) * speed;
+			        var pY = nY + (bY - nY) * speed;
+			        
+                    var apX = aX + (pX - aX) * queueSpeed;
+                    var apY = aY + (pY - aY) * queueSpeed;
+                    
+			        if(Math.abs(apX - bX) < 5 && Math.abs(apY - bY) < 5) {
+			            me.progress = (me.progress + 1 + bLen) % bLen;
+			        }
+			        
+			        l.setPoints([apX, apY, pX, pY]);
+				}
+			});
+			Ext.onReady(function() {
+            	var stage = new Kinetic.Stage({
+                    width: window.innerWidth - 24,
+                    height: window.innerHeight - 24,
+                    container: 'container'
+                });
+                var layer = new Kinetic.Layer();
+                var main = new Game({
+                	autoStart: true,
+                	stage: stage,
+                	layer: layer
+                });
+            });
+		</script>
+	</body>
+</html>
