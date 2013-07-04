@@ -108,27 +108,24 @@
                     var pos = sW / 2;
                     var angleLimit = 30;
                     
-                    var anim = new Kinetic.Animation({
-                        func: function(frame) {
-                            rotation = Math.min(angleLimit, Math.max(-angleLimit, rotation + (speed * direction)));
-                            
-                            var elapsed = Date.now() - start;
-                            var value = elapsed / speedDelay;
-                            
-                            speed = Math.min(speedLimit, (speedLimit * value));
-                            var xpos = ship.attrs.x + (pos - ship.attrs.x) * 0.05;
-                            
-                            pos = Math.max(shipW, Math.min(sW - shipW, pos + speed * direction));
-                            
-                            ship.setX(xpos);
-                            
-                            var rot = ship.getRotationDeg() + ((rotation - ship.getRotationDeg()) * 0.05);
-                            ship.setRotationDeg(rot);
-                            
-                            fyring && sendMissile(rot);
-                        },
-                        node: layer
-                    });
+                    var anim = new Kinetic.Animation(function(frame) {
+                        rotation = Math.min(angleLimit, Math.max(-angleLimit, rotation + (speed * direction)));
+                        
+                        var elapsed = Date.now() - start;
+                        var value = elapsed / speedDelay;
+                        
+                        speed = Math.min(speedLimit, (speedLimit * value));
+                        var xpos = ship.attrs.x + (pos - ship.attrs.x) * 0.05;
+                        
+                        pos = Math.max(shipW, Math.min(sW - shipW, pos + speed * direction));
+                        
+                        ship.setX(xpos);
+                        
+                        var rot = ship.getRotationDeg() + ((rotation - ship.getRotationDeg()) * 0.05);
+                        ship.setRotationDeg(rot);
+                        
+                        fyring && sendMissile(rot);
+                    }, layer);
                     
                     anim.start();
                     layer.add(ship);

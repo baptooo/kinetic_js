@@ -27,7 +27,7 @@
 		<script type="text/javascript" src="src/ext-core.js"></script>
 		<script type="text/javascript" src="src/kinetic.latest.js"></script>
 		
-		<script type="text/javascript" src="src/transitionTo.js"></script>
+		<!-- <script type="text/javascript" src="src/transitionTo.js"></script> -->
 		<script type="text/javascript" src="src/base.js"></script>
 		<script type="text/javascript">
 			Main = Ext.extend(Ext.Base, {
@@ -183,7 +183,7 @@
 						var oponent = me.oponents[i];
 						var oX = oponent.attrs.x - oponent.attrs.speedX;
 						
-						if(oX < -oponent.attrs.radius * oponent.attrs.scale.x) {
+						if(false && oX < -oponent.attrs.radius * oponent.attrs.scale.x) {
 							oponent.remove();
 							me.oponents.splice(i, 1);
 							me.updateScore(-1);

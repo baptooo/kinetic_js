@@ -63,10 +63,9 @@
 						
 					for(var i = 0; i < me.len; i++) {
 						var p = me.points[i],
-							//l = Math.pow(Math.pow(pos.x - p.getX(), 2) + Math.pow(pos.y - p.getY(), 2), 0.5);
-							l = Math.cos(frame.time / 200 * Math.PI) * 50 + 150;
+							l = Math.pow(Math.pow(pos.x - p.getX(), 2) + Math.pow(pos.y - p.getY(), 2), 0.5);
 							
-						p.setPoints([0,0,l * 0.5,0])
+						p.setPoints([0,0,l - 150,0]);
 					}
 				}
 			});
