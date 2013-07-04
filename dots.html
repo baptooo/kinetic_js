@@ -54,6 +54,7 @@
 				
 				setEvents: function() {
 				    var me = this;
+				    
 				    window.ondblclick = function() {
 				        me.addBall(me.mouse.x, me.mouse.y);
 				    }
@@ -71,6 +72,10 @@
 				        draggable: true
 				    });
 				    
+				    b.on('dragmove', function(e) {
+				        this.setRadius(e.pageY / me.sH * ballSize);
+				    });
+				    
 				    me.balls.push(b);
 				    me.layer.add(b);
 				},
@@ -82,11 +87,9 @@
 				    
 				    if(!bLen) return;
 				    
-				    var speed = 0.1,
+				    var headSpeed = 0.2,
 				        queueSpeed = 0.1,
 				        oB = balls[(me.progress - 1 + bLen) % bLen],
-				        obX = oB.getX(),
-				        obY = oB.getY(),
 				        b = balls[me.progress],
 				        bX = b.getX(),
 				        bY = b.getY(),
@@ -99,8 +102,8 @@
 				        
 			        var b = balls[me.progress];
 			        
-			        var pX = nX + (bX - nX) * speed;
-			        var pY = nY + (bY - nY) * speed;
+			        var pX = nX + (bX - nX) * headSpeed;
+			        var pY = nY + (bY - nY) * headSpeed;
 			        
                     var apX = aX + (pX - aX) * queueSpeed;
                     var apY = aY + (pY - aY) * queueSpeed;
