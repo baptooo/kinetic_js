@@ -43,10 +43,16 @@
 					var me = this;
 					me.balls = [];
 					
-					me.line = new Kinetic.Line({
-					    points: [0,0,10,10],
+					me.line = new Kinetic.Spline({
+					    points: [{
+					    	x: 0, y: 0
+					    }, {
+					    	x: 10, y: 10
+					    }],
 					    stroke: 'red',
-					    strokeWidth: 10
+					    strokeWidth: 10,
+					    lineCap: 'round',
+        				tension: 1
 					});
 					
 					me.layer.add(me.line);
@@ -83,7 +89,8 @@
 				onFrame: function(frame) {
 					var me = this,
 					    balls = me.balls,
-					    bLen = balls.length;
+					    bLen = balls.length,
+					    mouse = me.mouse;
 				    
 				    if(!bLen) return;
 				    
@@ -102,17 +109,29 @@
 				        
 			        var b = balls[me.progress];
 			        
-			        var pX = nX + (bX - nX) * headSpeed;
-			        var pY = nY + (bY - nY) * headSpeed;
+			        var head = {
+			        	x: nX + (bX - nX) * headSpeed,
+			        	y: nY + (bY - nY) * headSpeed
+			        }
 			        
-                    var apX = aX + (pX - aX) * queueSpeed;
-                    var apY = aY + (pY - aY) * queueSpeed;
+			        
+			        /* TODO: find curve
+			        var curve = {
+			        	x: aX + (head.x - queue.x) * queueSpeed,
+			        	y: aX + (head.y - queue.y) * queueSpeed
+			        }
+			        */
+			        
+			        var queue = {
+			        	x: aX + (head.x - aX) * queueSpeed,
+                    	y: aY + (head.y - aY) * queueSpeed
+			        }
                     
-			        if(Math.abs(apX - bX) < 5 && Math.abs(apY - bY) < 5) {
+			        if(Math.abs(queue.x - bX) < 5 && Math.abs(queue.y - bY) < 5) {
 			            me.progress = (me.progress + 1 + bLen) % bLen;
 			        }
 			        
-			        l.setPoints([apX, apY, pX, pY]);
+			        l.setPoints([queue, head]);
 				}
 			});
 			Ext.onReady(function() {

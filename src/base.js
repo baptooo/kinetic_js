@@ -8,6 +8,8 @@ Ext.Base = Ext.extend(Object, {
 	// get the mouse automaticaly
 	autoMouse: true,
 	
+	showFps: false,
+	
 	constructor: function(config) {
 		Ext.initialConfig = config;
 		Ext.apply(this, config || {});
@@ -48,9 +50,27 @@ Ext.Base = Ext.extend(Object, {
 		me.mouse = me.mouse || {x: 0, y: 0};
 		me.animation = new Kinetic.Animation(function() {
 			if(me.autoMouse) me.mouse = me.stage.getPointerPosition() || me.mouse;
+			if(me.showFps) {
+				me.updateFps.apply(me, arguments);
+			}
 			me.onFrame.apply(me, arguments);
 		}, me.layer);
 		me.animation.start();
+	},
+	
+	fpsTimeStamp: 0,
+	fpsCount: 0,
+	updateFps: function(frame) {
+		var me = this;
+		if(Date.now() - me.fpsTimeStamp < 1000) {
+			me.fpsCount++;
+			return;
+		}
+		me.fpsTimeStamp = Date.now();
+		
+		console.log(me.fpsCount);
+		
+		me.fpsCount = 0;
 	},
 	
 	stop: function() {
