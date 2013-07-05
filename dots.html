@@ -63,6 +63,23 @@
 				setEvents: function() {
 				    var me = this;
 				    
+				    if('ontouchstart' in window) {
+				        var last = Date.now(),
+				            count = 0;
+				        Ext.get('container').dom.addEventListener('touchstart', function(e) {
+				            if(Date.now() - last > 150) {
+				                count = 0;
+				            }
+				            last = Date.now();
+				            count++;
+				            if(count < 2) {
+				                return;
+				            }
+				            console.log('doubletap');
+				            me.addBall(me.mouse.x, me.mouse.y);
+				        });
+				    }
+				    
 				    window.ondblclick = function() {
 				        me.addBall(me.mouse.x, me.mouse.y);
 				    }
