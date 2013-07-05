@@ -47,12 +47,14 @@
 					    points: [{
 					    	x: 0, y: 0
 					    }, {
-					    	x: 10, y: 10
+					    	x: 0, y: 0
+					    }, {
+					        x: 0, y: 0
 					    }],
 					    stroke: 'red',
 					    strokeWidth: 10,
 					    lineCap: 'round',
-        				tension: 1
+        				tension: 0.5
 					});
 					
 					me.layer.add(me.line);
@@ -86,6 +88,10 @@
 				    me.layer.add(b);
 				},
 				
+				curve: {
+				    x: 0, y: 0
+				},
+				
 				onFrame: function(frame) {
 					var me = this,
 					    balls = me.balls,
@@ -94,9 +100,11 @@
 				    
 				    if(!bLen) return;
 				    
-				    var headSpeed = 0.2,
-				        queueSpeed = 0.1,
-				        oB = balls[(me.progress - 1 + bLen) % bLen],
+				    var headSpeed = 0.4,
+				        queueSpeed = 0.2,
+				        curve = me.curve,
+				        cX = curve.x,
+				        cY = curve.y,
 				        b = balls[me.progress],
 				        bX = b.getX(),
 				        bY = b.getY(),
@@ -106,32 +114,27 @@
 				        aY = p[0].y,
 				        nX = p[1].x,
 				        nY = p[1].y;
-				        
-			        var b = balls[me.progress];
 			        
 			        var head = {
 			        	x: nX + (bX - nX) * headSpeed,
 			        	y: nY + (bY - nY) * headSpeed
 			        }
 			        
-			        
-			        /* TODO: find curve
-			        var curve = {
-			        	x: aX + (head.x - queue.x) * queueSpeed,
-			        	y: aX + (head.y - queue.y) * queueSpeed
-			        }
-			        */
+			        cX = cX + (head.x - cX) * queueSpeed;
+                    cY = cY + (head.y - cY) * queueSpeed;
 			        
 			        var queue = {
-			        	x: aX + (head.x - aX) * queueSpeed,
-                    	y: aY + (head.y - aY) * queueSpeed
+			        	x: aX + (cX - aX) * queueSpeed,
+                    	y: aY + (cY - aY) * queueSpeed
 			        }
                     
 			        if(Math.abs(queue.x - bX) < 5 && Math.abs(queue.y - bY) < 5) {
 			            me.progress = (me.progress + 1 + bLen) % bLen;
 			        }
 			        
-			        l.setPoints([queue, head]);
+			        curve.x = cX;
+                    curve.y = cY;
+			        l.setPoints([queue, curve, head]);
 				}
 			});
 			Ext.onReady(function() {
